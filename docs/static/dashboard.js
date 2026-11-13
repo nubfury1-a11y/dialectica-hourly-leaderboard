@@ -69,9 +69,37 @@
     }).join("");
   }
 
+  function cumulativeSeries(data) {
+    // Saved progress is the lifetime total in each snapshot. Plotting the
+    // per-snapshot *change* instead makes the lines fall back to zero after
+    // every gain, which reads as lost progress even though history is saved.
+    const history = Array.isArray(data?.history) ? data.history : [];
+    const names = (data?.agents || []).map((agent) => agent.name).filter(Boolean);
+    if (!history.length || !names.length) return null;
+    const anchor = new Date(data?.last_snapshot_at || history[history.length - 1]?.timestamp || Date.now());
+    if (Number.isNaN(anchor.getTime())) return null;
+    const cutoff = anchor.getTime() - 24 * 60 * 60 * 1000;
+    const rows = history.filter((snap) => {
+      const at = new Date(snap?.timestamp || 0).getTime();
+      return !Number.isNaN(at) && at >= cutoff && snap?.agents && typeof snap.agents === "object";
+    });
+    if (!rows.length) return null;
+    return {
+      labels: rows.map((snap) => snap.timestamp),
+      datasets: names.map((name) => ({
+        label: name,
+        data: rows.map((snap) => {
+          const values = snap.agents[name];
+          return values && typeof values.total_trued === "number" ? values.total_trued : null;
+        }),
+      })),
+    };
+  }
+
   function renderChart(data) {
-    const labels = data?.chart?.labels || [];
-    const datasets = data?.chart?.datasets || [];
+    const cumulative = cumulativeSeries(data);
+    const labels = cumulative?.labels || data?.chart?.labels || [];
+    const datasets = cumulative?.datasets || data?.chart?.datasets ||;
     const hasPoints = labels.length > 0 && datasets.some((set) => set.data.some((n) => n !== null && n !== undefined));
     $("#chart-container").hidden = !hasPoints;
     $("#chart-empty").hidden = hasPoints;
@@ -100,7 +128,7 @@
         interaction: { mode: "nearest", intersect: false },
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { title: (items) => time(items[0]?.label), label: (item) => `${item.dataset.label}: ${money(item.raw)} $TRUED` } },
+          tooltip: { callbacks: { title: (items) => time(items[0]?.label), label: (item) => `${item.dataset.label}: ${money(item.raw, !cumulative)} $TRUED${cumulative ? " lifetime" : ""}` } },
         },
         scales: {
           x: { ticks: { color: "#7d8f99", maxTicksLimit: 5, maxRotation: 0, callback(value) { return time(this.getLabelForValue(value)); } }, grid: { color: "#1d2932" }, border: { display: false } },
@@ -124,8 +152,8 @@
     $("#next-snapshot").textContent = time(data.next_snapshot_at);
     $("#kpi-1h").textContent = data.combined_1h === null ? "—" : money(data.combined_1h);
     $("#kpi-24h").textContent = data.combined_24h === null ? "—" : money(data.combined_24h);
-    $("#kpi-1h-foot").textContent = data.combined_1h === null ? "Collecting a one-hour baseline" : `${data.baseline_1h_count} agent${data.baseline_1h_count === 1 ? "" : "s"} with a one-hour baseline`;
-    $("#kpi-24h-foot").textContent = data.combined_24h === null ? "Collecting a 24-hour baseline" : `${data.baseline_24h_count} agent${data.baseline_24h_count === 1 ? "" : "s"} with a 24-hour baseline`;
+    $("#kpi-1h-foot").textContent = data.combined_1h === null ? "Collecting a one-hour baseline" : `${data.baseline_1h_count} agent${data.baseline_1h_count === 1 ? "" : "s"} · rolling window, falls as gains age out`;
+    $("#kpi-24h-foot").textContent = data.combined_24h === null ? "Collecting a 24-hour baseline" : `${data.baseline_24h_count} agent${data.baseline_24h_count === 1 ? "" : "s"} · rolling window, falls as gains age out`;
     $("#kpi-top").textContent = data.top_agent ? data.top_agent.name : "—";
     $("#kpi-top-foot").textContent = data.top_agent ? `${money(data.top_agent.earned_1h)} $TRUED this hour` : "No hourly leader yet";
     $("#kpi-agents").textContent = `${data.matched_count ?? 0}/${data.configured_agent_count ?? 0}`;
