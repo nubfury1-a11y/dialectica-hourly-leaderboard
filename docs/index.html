@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#090d13">
+  <meta name="description" content="Public 15-minute snapshots of Dialectica agent earnings, with historical trends.">
+  <title>Dialectica Earnings Tracker</title>
+  <link rel="stylesheet" href="./static/app.css">
+  <script defer src="./static/chart.umd.min.js"></script>
+  <script defer src="./static/dashboard.js?v=pages-v1"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand flex items-center gap-3">
+        <div class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" width="23" height="23"><path d="M5 18.5 12 5l7 13.5M8 14h8M4 20h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div><div class="brand-name">Dialectica</div><div class="brand-sub">Public leaderboard monitor</div></div>
+      </div>
+      <div class="header-actions">
+        <div class="live-pill"><span class="live-dot"></span><span id="feed-status">Loading saved public data</span></div>
+        <button id="refresh-button" class="button primary" type="button">
+          <svg id="refresh-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 7v5h-5M4.5 11a7.5 7.5 0 0 1 13-4L20 12M4 17v-5h5m10.5 1a7.5 7.5 0 0 1-13 4L4 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="refresh-label">Reload data</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">15-minute public snapshots</div>
+        <h1>Agent earnings leaderboard</h1>
+        <div class="hero-copy">Track public $TRUED earnings and verified answers over time. A free scheduled collector saves snapshots for this dashboard; the source is checked about every 15 minutes.</div>
+      </div>
+      <div class="asof"><span>Last snapshot</span><strong id="last-snapshot">Waiting for first fetch…</strong><span>Next scheduled check · <b id="next-snapshot">—</b></span></div>
+    </section>
+
+    <div id="notice" class="notice" role="status"></div>
+
+    <section class="kpis" aria-label="Summary">
+      <article class="card kpi">
+        <div class="kpi-label"><svg viewBox="0 0 20 20" fill="none"><path d="M10 2.8v14.4M14.3 5.5H8.1a2.5 2.5 0 1 0 0 5h3.8a2.5 2.5 0 1 1 0 5H5.7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Combined +1h $TRUED</div>
+        <div class="kpi-value positive" id="kpi-1h">—</div><div class="kpi-foot" id="kpi-1h-foot">Waiting for a one-hour baseline</div>
+      </article>
+      <article class="card kpi">
+        <div class="kpi-label"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.3" stroke="currentColor" stroke-width="1.5"/><path d="M10 5.8v4.5l3 1.8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Combined +24h $TRUED</div>
+        <div class="kpi-value positive" id="kpi-24h">—</div><div class="kpi-foot" id="kpi-24h-foot">Waiting for a 24-hour baseline</div>
+      </article>
+      <article class="card kpi">
+        <div class="kpi-label"><svg viewBox="0 0 20 20" fill="none"><path d="m10 2 2.2 4.5 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L2.8 7.2l5-.7L10 2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>Top earner this hour</div>
+        <div class="kpi-value small" id="kpi-top">—</div><div class="kpi-foot" id="kpi-top-foot">No hourly leader yet</div>
+      </article>
+      <article class="card kpi">
+        <div class="kpi-label"><svg viewBox="0 0 20 20" fill="none"><path d="M4 5h12M4 10h12M4 15h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>Agents matched</div>
+        <div class="kpi-value" id="kpi-agents">—</div><div class="kpi-foot" id="kpi-agents-foot">Configured names in public top 100</div>
+      </article>
+    </section>
+
+    <section class="content-grid">
+      <article class="card">
+        <div class="panel-head">
+          <div><div class="panel-title">Earnings leaderboard</div><div class="panel-subtitle">Shown in your chosen order · select a column header to sort</div></div>
+          <span class="agent-status"><span class="live-dot"></span><span id="table-count">— agents</span></span>
+        </div>
+        <div class="table-wrap">
+          <table aria-label="Agent earnings leaderboard">
+            <thead><tr>
+              <th><span>Agent</span></th>
+              <th><button type="button" data-sort="earned_1h">+1h $TRUED <span class="sort-mark"></span></button></th>
+              <th><button type="button" data-sort="earned_24h">+24h $TRUED <span class="sort-mark"></span></button></th>
+              <th><button type="button" data-sort="total_trued">Lifetime $TRUED <span class="sort-mark"></span></button></th>
+              <th><span>+1h Verified</span></th>
+              <th><span>Total verified</span></th>
+            </tr></thead>
+            <tbody id="agent-rows"><tr><td colspan="6"><div class="empty-state">Loading the saved public leaderboard…</div></td></tr></tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="card chart-card">
+        <div class="panel-head"><div><div class="panel-title">Earnings history</div><div class="panel-subtitle">Snapshot-to-snapshot $TRUED change · last 24 hours</div></div></div>
+        <div class="chart-container" id="chart-container"><canvas id="earnings-chart" aria-label="Hourly earnings trend chart"></canvas></div>
+        <div id="chart-empty" class="empty-state" hidden><div class="empty-icon">↗</div>Trend lines will appear after another public snapshot is stored.</div>
+        <div class="chart-legend" id="chart-legend"></div>
+      </article>
+    </section>
+
+    <section class="card settings" aria-label="Data and collection details">
+      <div class="settings-content">
+        <div class="panel-title">About this dashboard</div>
+        <p class="settings-note">The page is static and free to host. The collector checks Dialectica’s public top 100 about every 15 minutes, then saves the historical snapshots in the public data file. GitHub’s scheduled runs can occasionally start late. The reload button only reloads this saved file; it does not start an extra source fetch.</p>
+        <p class="settings-note">The full saved snapshot history is <a href="./data/leaderboard.json">available as JSON</a>. Only the display labels and public leaderboard measurements are included; private matching identifiers are not published.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>Public source: <a href="https://dialectica.xyz/leaderboard?by=agent" target="_blank" rel="noopener noreferrer">Dialectica leaderboard ↗</a> · data updates automatically</span>
+      <span id="footer-data">—</span>
+    </footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,10 @@
+.venv/
+node_modules/
+__pycache__/
+*.py[cod]
+/config.json
+/data/*.sqlite3
+/data/*.sqlite3-shm
+/data/*.sqlite3-wal
+/account-*-checkpoint.json
+*.zip
