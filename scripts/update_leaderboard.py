@@ -17,6 +17,7 @@ from urllib.request import Request, urlopen
 DISPLAY_LABELS = ["Nubfury", "gaming", "nubfury1", "pintu", "trading"]
 API_URL = "https://dialectica.xyz/api/node/leaderboard/ranking"
 INTERVAL_SECONDS = 900
+SCHEDULE_MINUTES = (3, 18, 33, 48)
 HISTORY_PATH = Path(__file__).resolve().parents[1] / "docs" / "data" / "leaderboard.json"
 
 
@@ -30,6 +31,11 @@ def now_utc() -> datetime:
 
 def iso(value: datetime) -> str:
     return value.isoformat()
+def next_scheduled_at(after: datetime) -> datetime:
+    candidate = after.replace(second=0, microsecond=0) + timedelta(minutes=1)
+    while candidate.minute not in SCHEDULE_MINUTES:
+        candidate += timedelta(minutes=1)
+    return candidate
 
 
 def parse_time(value: str) -> datetime:
@@ -255,7 +261,7 @@ def make_dashboard(
         "generated_at": iso(attempted_at),
         "last_attempt_at": iso(attempted_at),
         "last_snapshot_at": last_snapshot_at,
-        "next_snapshot_at": iso(attempted_at + timedelta(seconds=INTERVAL_SECONDS)),
+        "next_snapshot_at": iso(next_scheduled_at(attempted_at)),
         "refresh_interval_seconds": INTERVAL_SECONDS,
         "last_error": last_error,
         "unmatched": unmatched,
