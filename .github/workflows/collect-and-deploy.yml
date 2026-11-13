@@ -49,6 +49,7 @@ jobs:
           if ! git diff --quiet -- docs/data/leaderboard.json; then
             git add docs/data/leaderboard.json
             git commit -m "Update public leaderboard snapshots"
+            git pull --rebase origin main
             git push
           fi
 
