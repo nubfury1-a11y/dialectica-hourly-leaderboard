@@ -99,7 +99,7 @@
   function renderChart(data) {
     const cumulative = cumulativeSeries(data);
     const labels = cumulative?.labels || data?.chart?.labels || [];
-    const datasets = cumulative?.datasets || data?.chart?.datasets ||;
+    const datasets = cumulative?.datasets || data?.chart?.datasets || [];
     const hasPoints = labels.length > 0 && datasets.some((set) => set.data.some((n) => n !== null && n !== undefined));
     $("#chart-container").hidden = !hasPoints;
     $("#chart-empty").hidden = hasPoints;
