@@ -90,7 +90,7 @@
     <section class="card settings" aria-label="Data and collection details">
       <div class="settings-content">
         <div class="panel-title">About this dashboard</div>
-        <p class="settings-note">The page is static and free to host. The collector checks Dialectica’s public top 100 about every 15 minutes, then saves the historical snapshots in the public data file. GitHub’s scheduled runs can occasionally start late. The reload button only reloads this saved file; it does not start an extra source fetch.</p>
+        <p class="settings-note">The page is static and free to host. The collector checks Dialectica’s public top 100 about every 15 minutes, then saves historical snapshots in the public data file. GitHub’s scheduled runs can occasionally start late. Reload data force-checks this published file for a newer snapshot; it cannot safely start a source collection from a public page.</p>
         <p class="settings-note">The full saved snapshot history is <a href="./data/leaderboard.json">available as JSON</a>. Only the display labels and public leaderboard measurements are included; private matching identifiers are not published.</p>
       </div>
     </section>

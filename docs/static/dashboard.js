@@ -22,8 +22,14 @@
   let chart = null;
   let dashboard = null;
   let loadInProgress = false;
+  let queuedManualReload = false;
+  let noticeTimer = null;
 
   function setNotice(message, kind = "info") {
+    if (noticeTimer) {
+      window.clearTimeout(noticeTimer);
+      noticeTimer = null;
+    }
     const el = $("#notice");
     if (!message) {
       el.textContent = "";
@@ -145,15 +151,21 @@
   }
 
   async function loadDashboard(showReloadMessage = false) {
-    if (loadInProgress) return;
+    if (loadInProgress) {
+      if (showReloadMessage) queuedManualReload = true;
+      return;
+    }
     loadInProgress = true;
     const button = $("#refresh-button");
     const label = $("#refresh-label");
     button.disabled = true;
     label.textContent = "Loading…";
     $("#refresh-icon").classList.add("spinner");
+    let requestTimeout = null;
+    const controller = new AbortController();
     try {
-      const response = await fetch(`${DATA_URL}?v=${Date.now()}`, { cache: "no-store" });
+      requestTimeout = window.setTimeout(() => controller.abort(), 20_000);
+      const response = await fetch(`${DATA_URL}?v=${Date.now()}`, { cache: "no-store", signal: controller.signal });
       if (!response.ok) throw new Error(`Saved dashboard data is unavailable (${response.status})`);
       const previousSnapshotAt = dashboard?.last_snapshot_at ?? null;
       const latest = await response.json();
@@ -163,17 +175,26 @@
         const snapshotTime = time(latest.last_snapshot_at);
         setNotice(snapshotChanged
           ? `New published snapshot loaded (${snapshotTime}).`
-          : `You're up to date. Latest snapshot: ${snapshotTime}. New collections run automatically every 15 minutes; Reload data checks for published updates.`, "info");
-        window.setTimeout(() => { if (dashboard && !dashboard.last_error && !dashboard.unmatched?.length) setNotice(""); }, 4500);
+          : `You're up to date. Latest snapshot: ${snapshotTime}. Collections are scheduled every 15 minutes; Reload data checks for a published update.`, "info");
+        noticeTimer = window.setTimeout(() => {
+          noticeTimer = null;
+          if (dashboard && !dashboard.last_error && !dashboard.unmatched?.length) setNotice("");
+        }, 4500);
       }
     } catch (error) {
-      setNotice(`Could not load saved dashboard data: ${error.message}`, "error");
-      $("#feed-status").textContent = "Dashboard data unavailable";
+      const detail = error?.name === "AbortError" ? "The request timed out. Try again." : (error?.message || "Network error");
+      setNotice(`Could not load saved dashboard data: ${detail}`, "error");
+      $("#feed-status").textContent = dashboard?.last_snapshot_at ? "Showing saved data · reload failed" : "Dashboard data unavailable";
     } finally {
+      if (requestTimeout) window.clearTimeout(requestTimeout);
       loadInProgress = false;
       button.disabled = false;
       label.textContent = "Reload data";
       $("#refresh-icon").classList.remove("spinner");
+      if (queuedManualReload) {
+        queuedManualReload = false;
+        void loadDashboard(true);
+      }
     }
   }
 
