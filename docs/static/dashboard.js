@@ -155,9 +155,15 @@
     try {
       const response = await fetch(`${DATA_URL}?v=${Date.now()}`, { cache: "no-store" });
       if (!response.ok) throw new Error(`Saved dashboard data is unavailable (${response.status})`);
-      renderDashboard(await response.json());
-      if (showReloadMessage && !dashboard.last_error && !dashboard.unmatched?.length) {
-        setNotice("Dashboard data reloaded. The next source check runs automatically.", "info");
+      const previousSnapshotAt = dashboard?.last_snapshot_at ?? null;
+      const latest = await response.json();
+      renderDashboard(latest);
+      if (showReloadMessage && !latest.last_error && !latest.unmatched?.length) {
+        const snapshotChanged = latest.last_snapshot_at && latest.last_snapshot_at !== previousSnapshotAt;
+        const snapshotTime = time(latest.last_snapshot_at);
+        setNotice(snapshotChanged
+          ? `New published snapshot loaded (${snapshotTime}).`
+          : `You're up to date. Latest snapshot: ${snapshotTime}. New collections run automatically every 15 minutes; Reload data checks for published updates.`, "info");
         window.setTimeout(() => { if (dashboard && !dashboard.last_error && !dashboard.unmatched?.length) setNotice(""); }, 4500);
       }
     } catch (error) {
@@ -187,5 +193,5 @@
   });
 
   loadDashboard();
-  window.setInterval(() => loadDashboard(), 60_000);
+  window.setInterval(() => loadDashboard(), 15_000);
 })();
