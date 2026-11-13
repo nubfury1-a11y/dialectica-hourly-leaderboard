@@ -8,7 +8,7 @@
   <title>Dialectica Earnings Tracker</title>
   <link rel="stylesheet" href="./static/app.css">
   <script defer src="./static/chart.umd.min.js"></script>
-  <script defer src="./static/dashboard.js?v=pages-v2"></script>
+  <script defer src="./static/dashboard.js?v=pages-v3"></script>
 </head>
 <body>
   <main class="shell">
@@ -61,7 +61,7 @@
     <section class="content-grid">
       <article class="card">
         <div class="panel-head">
-          <div><div class="panel-title">Earnings leaderboard</div><div class="panel-subtitle">Shown in your chosen order · select a column header to sort</div></div>
+          <div><div class="panel-title">Earnings leaderboard</div><div class="panel-subtitle">Shown in your chosen order · Lifetime $TRUED is your saved progress · +1h / +24h are rolling windows</div></div>
           <span class="agent-status"><span class="live-dot"></span><span id="table-count">— agents</span></span>
         </div>
         <div class="table-wrap">
@@ -80,7 +80,7 @@
       </article>
 
       <article class="card chart-card">
-        <div class="panel-head"><div><div class="panel-title">Earnings history</div><div class="panel-subtitle">Snapshot-to-snapshot $TRUED change · last 24 hours</div></div></div>
+        <div class="panel-head"><div><div class="panel-title">Earnings history</div><div class="panel-subtitle">Lifetime $TRUED from saved snapshots · last 24 hours</div></div></div>
         <div class="chart-container" id="chart-container"><canvas id="earnings-chart" aria-label="Hourly earnings trend chart"></canvas></div>
         <div id="chart-empty" class="empty-state" hidden><div class="empty-icon">↗</div>Trend lines will appear after another public snapshot is stored.</div>
         <div class="chart-legend" id="chart-legend"></div>
@@ -91,7 +91,8 @@
       <div class="settings-content">
         <div class="panel-title">About this dashboard</div>
         <p class="settings-note">The page is static and free to host. The collector checks Dialectica’s public top 100 about every 15 minutes, then saves historical snapshots in the public data file. GitHub’s scheduled runs can occasionally start late. Reload data force-checks this published file for a newer snapshot; it cannot safely start a source collection from a public page.</p>
-        <p class="settings-note">The full saved snapshot history is <a href="./data/leaderboard.json">available as JSON</a>. Only the display labels and public leaderboard measurements are included; private matching identifiers are not published.</p>
+        <p class="settings-note">The full saved snapshot history is <a href="./data/leaderboard.json">available as JSON</a>. Only the display labels and public leaderboard measurements are included;         <p class="settings-note">The full saved snapshot history is <a href="./data/leaderboard.json">available as JSON</a>. Only the display labels and public leaderboard measurements are included;         <p class="settings-note">The full saved snapshot history is <a href="./data/leaderboard.json">available as JSON</a>. Only the display labels and public leaderboard measurements are included; private matching identifiers are not published.</p>
+        <p class="settings-note"><strong>Why the +1h number goes down:</strong> +1h and +24h are rolling windows, not saved progress. When a big gain passes the one-hour mark it drops out of +1h, so that figure falls even while Lifetime $TRUED keeps rising. Saved progress is the Lifetime $TRUED column and the history chart above, built from every stored snapshot. A lifetime total only changes when Dialectica itself changes it: new verified earnings add to it, and a falsified answer subtracts 1 at the source.</p>
       </div>
     </section>
 
