@@ -1,6 +1,8 @@
 name: Collect leaderboard and deploy Pages
 
 on:
+  schedule:
+    - cron: "3,18,33,48 * * * *"
   workflow_dispatch:
     inputs:
       deploy_only:
